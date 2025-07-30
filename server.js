@@ -2,6 +2,7 @@ import express from 'express';
 import sqlite3 from 'sqlite3';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
 const app = express();
 const db = new sqlite3.Database('db.sqlite');
@@ -54,6 +55,17 @@ app.get('/api/filters', (req, res) => {
       if (!err) result[f] = rows.map((r) => r[f]);
       if (--pending === 0) res.json(result);
     });
+  });
+});
+
+app.post('/api/refresh', (req, res) => {
+  const child = spawn('python', [path.join(__dirname, 'scraper.py')]);
+  child.on('close', (code) => {
+    if (code === 0) {
+      res.json({ status: 'ok' });
+    } else {
+      res.status(500).json({ error: 'scraper failed' });
+    }
   });
 });
 
