@@ -4,16 +4,21 @@
 <meta charset="UTF-8">
 <title>Dashboard Viaggi</title>
 <style>
-body { font-family: Arial, sans-serif; }
+body { font-family: Arial, sans-serif; margin: 20px; }
+#controls { margin-bottom: 1em; }
 #filters { margin-bottom: 1em; }
 table { border-collapse: collapse; width: 100%; }
-th, td { border: 1px solid #ccc; padding: 4px; }
+th, td { border: 1px solid #ccc; padding: 6px; }
 th { cursor: pointer; background: #eee; }
+button { padding: 0.5em 1em; }
 </style>
 </head>
 <body>
 <h1>Offerte Viaggi</h1>
-<div id="filters"></div>
+<div id="controls">
+  <button id="refresh">Aggiorna offerte</button>
+  <div id="filters"></div>
+</div>
 <table id="offers">
 <thead>
 <tr><th data-field="country">Paese</th><th data-field="name">Struttura</th><th data-field="date">Partenza</th><th data-field="duration">Durata</th><th data-field="airport">Aeroporto</th><th data-field="formula">Tipo</th><th data-field="price">Prezzo</th><th data-field="transfer">Transfer</th></tr>
@@ -63,6 +68,13 @@ document.querySelectorAll('th').forEach(th=>{
   th.onclick = ()=>{ sortBy = th.dataset.field; loadOffers(); };
 });
 loadFilters().then(loadOffers);
+document.getElementById('refresh').onclick = async () => {
+  document.getElementById('refresh').disabled = true;
+  await fetch('/api/refresh', {method: 'POST'});
+  await loadFilters();
+  await loadOffers();
+  document.getElementById('refresh').disabled = false;
+};
 </script>
 </body>
 </html>

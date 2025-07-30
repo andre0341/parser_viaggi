@@ -64,6 +64,7 @@ def save_offer(info):
 def parse_offers(html):
     soup = BeautifulSoup(html, "html.parser")
     items = soup.select(".last-second-item, .offer")
+    count = 0
     for item in items:
         text = item.get_text(" ", strip=True)
         match = OFFER_RE.search(text)
@@ -72,17 +73,27 @@ def parse_offers(html):
             data["price"] = float(data["price"].replace(".", ""))
             data["transfer"] = 1 if "TRF" in text.upper() else 0
             save_offer(data)
+            count += 1
+    return count
 
 
 def main():
     create_db()
-    try:
-        resp = requests.get(URL, timeout=10)
-        resp.raise_for_status()
-    except Exception as e:
-        print(f"Error fetching {URL}: {e}")
-        return
-    parse_offers(resp.text)
+    page = 1
+    total = 0
+    while True:
+        try:
+            resp = requests.get(URL, params={"page": page}, timeout=10)
+            resp.raise_for_status()
+        except Exception as e:
+            print(f"Error fetching page {page}: {e}")
+            break
+        count = parse_offers(resp.text)
+        if count == 0:
+            break
+        total += count
+        page += 1
+    print(f"Scraped {total} offers")
 
 
 if __name__ == "__main__":
